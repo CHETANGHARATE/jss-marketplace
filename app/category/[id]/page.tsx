@@ -11,7 +11,10 @@ import {
   ShoppingBag,
   Star,
   ChevronLeft,
-  MessageSquare
+  MessageSquare,
+  Tag,
+  TrendingUp,
+  Clock
 } from 'lucide-react';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { Filters } from '../../../components/Filters';
@@ -96,6 +99,20 @@ export default function CategoryPage({ params }: CategoryPageProps) {
     };
     loadProducts();
   }, [filters]);
+
+  // Baseline (unfiltered) category catalog — powers Featured / Best Sellers / New Arrivals / Offers strips
+  const [categoryBaseline, setCategoryBaseline] = useState<Product[]>([]);
+  useEffect(() => {
+    getProducts({ category: categoryId }).then(setCategoryBaseline).catch(() => setCategoryBaseline([]));
+  }, [categoryId]);
+
+  const featuredProducts = categoryBaseline.slice(0, 4);
+  const bestSellers = [...categoryBaseline].sort((a, b) => b.rating - a.rating).slice(0, 4);
+  const newArrivals = [...categoryBaseline].sort((a, b) => b.id.localeCompare(a.id)).slice(0, 4);
+  const offers = [...categoryBaseline]
+    .filter((p) => p.discountPercent >= 10)
+    .sort((a, b) => b.discountPercent - a.discountPercent)
+    .slice(0, 4);
 
   if (!category) {
     return (
@@ -185,6 +202,95 @@ export default function CategoryPage({ params }: CategoryPageProps) {
           Activate Code: JSS10
         </button>
       </div>
+
+      {/* Featured Products */}
+      {featuredProducts.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Sparkles size={16} className="text-accent" />
+            <h3 className="font-black text-lg text-foreground tracking-tight">Featured Products</h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            {featuredProducts.map((prod) => (
+              <ProductCard key={`feat_${prod.id}`} product={prod} onQuickView={setQuickViewProductId} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Best Sellers & New Arrivals */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {bestSellers.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp size={16} className="text-primary" />
+              <h3 className="font-black text-lg text-foreground tracking-tight">Best Sellers</h3>
+            </div>
+            <div className="space-y-3">
+              {bestSellers.map((prod) => (
+                <div
+                  key={`best_${prod.id}`}
+                  onClick={() => setQuickViewProductId(prod.id)}
+                  className="flex gap-4 p-3 bg-card border border-border-custom rounded-2xl shadow-sm hover:border-primary cursor-pointer transition-all"
+                >
+                  <img src={prod.image} alt={prod.name} className="h-14 w-14 rounded-xl object-cover bg-background-secondary shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-bold text-sm text-foreground truncate">{prod.name}</h4>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="font-black text-sm text-primary">₹{prod.offerPrice.toLocaleString()}</span>
+                      <span className="flex items-center gap-0.5 text-[10px] font-bold text-amber-500">
+                        <Star size={10} fill="currentColor" /> {prod.rating}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {newArrivals.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Clock size={16} className="text-accent" />
+              <h3 className="font-black text-lg text-foreground tracking-tight">New Arrivals</h3>
+            </div>
+            <div className="space-y-3">
+              {newArrivals.map((prod) => (
+                <div
+                  key={`new_${prod.id}`}
+                  onClick={() => setQuickViewProductId(prod.id)}
+                  className="flex gap-4 p-3 bg-card border border-border-custom rounded-2xl shadow-sm hover:border-primary cursor-pointer transition-all"
+                >
+                  <img src={prod.image} alt={prod.name} className="h-14 w-14 rounded-xl object-cover bg-background-secondary shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-bold text-sm text-foreground truncate">{prod.name}</h4>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="font-black text-sm text-primary">₹{prod.offerPrice.toLocaleString()}</span>
+                      <span className="text-[10px] text-green-600 bg-green-500/10 px-1.5 py-0.5 rounded font-bold">Fresh</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Offers */}
+      {offers.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Tag size={16} className="text-accent" />
+            <h3 className="font-black text-lg text-foreground tracking-tight">Offers on {t(category.name)}</h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            {offers.map((prod) => (
+              <ProductCard key={`offer_${prod.id}`} product={prod} onQuickView={setQuickViewProductId} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Subcategories Horizontal Scroll */}
       <div className="space-y-3">
