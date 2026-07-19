@@ -24,8 +24,9 @@ export const Footer: React.FC = () => {
       { name: 'cat.fashion', href: '/category/fashion' },
       { name: 'cat.electronics', href: '/category/electronics' },
       { name: 'cat.agriculture', href: '/category/agriculture' },
-      { name: 'cat.home_decor', href: '/category/home_decor' },
-      { name: 'cat.furniture', href: '/category/furniture' }
+      { name: 'cat.jewellery', href: '/category/jewellery' },
+      { name: 'cat.beauty_personal_care', href: '/category/beauty_personal_care' },
+      { name: 'cat.gifts_handicrafts', href: '/category/gifts_handicrafts' }
     ],
     seller: [
       { name: 'nav.become_seller', href: '/seller/register' },
