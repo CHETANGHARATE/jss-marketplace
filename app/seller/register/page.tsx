@@ -1,7 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Store, CheckCircle2, TrendingUp, ShieldCheck, Zap } from 'lucide-react';
+import { useLanguage } from '../../../contexts/LanguageContext';
+import { getCategories } from '../../../services/category';
+import { Category } from '../../../types';
 
 const perks = [
   { icon: TrendingUp, title: 'Reach more buyers', desc: 'Get your products in front of thousands of active shoppers across India.' },
@@ -10,6 +13,8 @@ const perks = [
 ];
 
 export default function SellerRegisterPage() {
+  const { t } = useLanguage();
+  const [categories, setCategories] = useState<Category[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({
     businessName: '',
@@ -19,6 +24,10 @@ export default function SellerRegisterPage() {
     category: '',
     gstin: ''
   });
+
+  useEffect(() => {
+    getCategories().then(setCategories);
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -144,12 +153,11 @@ export default function SellerRegisterPage() {
                 className="w-full mt-1 bg-background-secondary border border-border-custom rounded-xl px-4 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
               >
                 <option value="">Select category</option>
-                <option value="fashion">Fashion</option>
-                <option value="electronics">Electronics</option>
-                <option value="agriculture">Agriculture</option>
-                <option value="home-decor">Home Decor</option>
-                <option value="furniture">Furniture</option>
-                <option value="other">Other</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {t(cat.name)}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
