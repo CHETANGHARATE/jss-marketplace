@@ -20,21 +20,22 @@ import {
   Plus,
   Minus,
   CheckCircle2,
-  Info
+  Info,
+  LogIn
 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCartWishlist } from '../contexts/CartWishlistContext';
-import { getCategories } from '../services/category';
-import { Category, Product } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 import { SearchDropdown } from './SearchDropdown';
 import { ProductQuickView } from './ProductQuickView';
-import { getProductById } from '../services/product';
+import { MegaMenu } from './MegaMenu';
 
 export const Header: React.FC = () => {
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
+  const { user, isAuthenticated, logout } = useAuth();
   const {
     cart,
     wishlist,
@@ -46,10 +47,8 @@ export const Header: React.FC = () => {
     cartItemCount
   } = useCartWishlist();
 
-  const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
-  const [categoriesMenuOpen, setCategoriesMenuOpen] = useState(false);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notifPanelOpen, setNotifPanelOpen] = useState(false);
@@ -63,29 +62,16 @@ export const Header: React.FC = () => {
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
   const searchRef = useRef<HTMLDivElement>(null);
-  const catMenuRef = useRef<HTMLDivElement>(null);
   const langMenuRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const fetchCats = async () => {
-      const data = await getCategories();
-      setCategories(data);
-    };
-    fetchCats();
-  }, []);
-
-  // Click outside handlers
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       
       if (searchRef.current && !searchRef.current.contains(target)) {
         setSearchFocused(false);
-      }
-      if (catMenuRef.current && !catMenuRef.current.contains(target)) {
-        setCategoriesMenuOpen(false);
       }
       if (langMenuRef.current && !langMenuRef.current.contains(target)) {
         setLangMenuOpen(false);
@@ -142,8 +128,13 @@ export const Header: React.FC = () => {
               </Link>
             </div>
 
+            {/* Mega Menu Category Catalog */}
+            <div className="hidden lg:block">
+              <MegaMenu />
+            </div>
+
             {/* Global Search Bar */}
-            <div ref={searchRef} className="hidden lg:block relative flex-1 max-w-xl mx-4">
+            <div ref={searchRef} className="hidden lg:block relative flex-1 max-w-xl mx-2">
               <form onSubmit={handleSearchSubmit} className="relative">
                 <input
                   type="text"
@@ -176,33 +167,6 @@ export const Header: React.FC = () => {
             {/* Utility Actions */}
             <div className="flex items-center gap-1 sm:gap-3">
               
-              {/* Category Dropdown */}
-              <div ref={catMenuRef} className="relative hidden xl:block">
-                <button
-                  onClick={() => setCategoriesMenuOpen(!categoriesMenuOpen)}
-                  className="flex items-center gap-1.5 text-sm font-semibold text-foreground hover:text-primary transition-colors px-3 py-2 rounded-xl hover:bg-background-secondary"
-                >
-                  <span>{t('nav.all_categories')}</span>
-                  <ChevronDown size={16} className={`transform transition-transform ${categoriesMenuOpen ? 'rotate-180' : ''}`} />
-                </button>
-                {categoriesMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-card border border-border-custom rounded-2xl shadow-xl z-50 overflow-hidden divide-y divide-border-custom">
-                    <div className="py-2">
-                      {categories.map((cat) => (
-                        <Link
-                          key={cat.id}
-                          href={`/category/${cat.id}`}
-                          onClick={() => setCategoriesMenuOpen(false)}
-                          className="flex items-center px-4 py-2.5 text-sm text-foreground hover:bg-background-secondary hover:text-primary transition-colors"
-                        >
-                          {t(cat.name)}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
               {/* Language Switcher */}
               <div ref={langMenuRef} className="relative">
                 <button
@@ -312,40 +276,57 @@ export const Header: React.FC = () => {
 
               {/* User Profile dropdown */}
               <div ref={userMenuRef} className="relative hidden md:block">
-                <button
-                  onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-1.5 p-1.5 pr-3 rounded-full border border-border-custom hover:border-primary bg-background-secondary hover:bg-card transition-all"
-                >
-                  <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
-                    JD
-                  </div>
-                  <ChevronDown size={14} className="text-muted-custom" />
-                </button>
-                {userMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-card border border-border-custom rounded-2xl shadow-xl z-50 overflow-hidden divide-y divide-border-custom">
-                    <div className="px-4 py-3">
-                      <p className="text-xs text-muted-custom leading-none">Signed in as</p>
-                      <p className="text-sm font-semibold text-foreground mt-1 truncate">John Doe</p>
-                    </div>
-                    <div className="py-1">
-                      <Link href="/profile" className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-background-secondary transition-colors">
-                        <User size={16} className="text-muted-custom" />
-                        {t('nav.profile')}
-                      </Link>
-                      <Link href="/seller/dashboard" className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-background-secondary transition-colors">
-                        <Store size={16} className="text-muted-custom" />
-                        {t('nav.become_seller')}
-                      </Link>
-                    </div>
-                    <div className="py-1">
-                      <button
-                        onClick={() => alert('Logout action')}
-                        className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-accent hover:bg-background-secondary transition-colors"
-                      >
-                        {t('nav.logout')}
-                      </button>
-                    </div>
-                  </div>
+                {isAuthenticated && user ? (
+                  <>
+                    <button
+                      onClick={() => setUserMenuOpen(!userMenuOpen)}
+                      className="flex items-center gap-1.5 p-1.5 pr-3 rounded-full border border-border-custom hover:border-primary bg-background-secondary hover:bg-card transition-all"
+                    >
+                      <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs uppercase">
+                        {user.name.substring(0, 2)}
+                      </div>
+                      <span className="text-xs font-semibold text-foreground max-w-[100px] truncate">
+                        {user.name}
+                      </span>
+                      <ChevronDown size={14} className="text-muted-custom" />
+                    </button>
+                    {userMenuOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-card border border-border-custom rounded-2xl shadow-xl z-50 overflow-hidden divide-y divide-border-custom">
+                        <div className="px-4 py-3">
+                          <p className="text-xs text-muted-custom leading-none">Signed in as</p>
+                          <p className="text-sm font-semibold text-foreground mt-1 truncate">{user.name}</p>
+                        </div>
+                        <div className="py-1">
+                          <Link href="/profile" className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-background-secondary transition-colors">
+                            <User size={16} className="text-muted-custom" />
+                            {t('nav.profile')}
+                          </Link>
+                          {user.role === 'seller' && (
+                            <Link href="/seller/dashboard" className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-background-secondary transition-colors">
+                              <Store size={16} className="text-muted-custom" />
+                              Seller Dashboard
+                            </Link>
+                          )}
+                        </div>
+                        <div className="py-1">
+                          <button
+                            onClick={() => logout()}
+                            className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-accent hover:bg-background-secondary transition-colors"
+                          >
+                            {t('nav.logout')}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    href="/login"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary/10 text-primary text-xs font-bold hover:bg-primary/20 transition-all"
+                  >
+                    <LogIn size={14} />
+                    <span>Login</span>
+                  </Link>
                 )}
               </div>
 
@@ -436,7 +417,7 @@ export const Header: React.FC = () => {
                 </div>
                 <button
                   onClick={() => {
-                    alert('Redirecting to secure Laravel mock gateway checkout');
+                    alert('Redirecting to checkout');
                     setCartOpen(false);
                   }}
                   className="w-full bg-primary text-white py-3.5 rounded-2xl font-bold hover:bg-primary-hover transition-all text-center block shadow-lg hover:shadow-primary/20 hover:-translate-y-0.5 active:translate-y-0"
@@ -506,105 +487,6 @@ export const Header: React.FC = () => {
                   </div>
                 ))
               )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Mobile Drawer Navigation Menu */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 flex bg-black/50 backdrop-blur-xs transition-opacity lg:hidden">
-          <div className="w-full max-w-sm bg-card text-card-foreground p-6 shadow-2xl flex flex-col h-full animate-slide-in relative border-r border-border-custom">
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="absolute top-4 right-4 p-2 text-foreground hover:bg-background-secondary rounded-xl"
-            >
-              <X size={20} />
-            </button>
-            <div className="text-2xl font-black tracking-tight text-primary flex items-center mb-8">
-              JSS<span className="text-accent">Solutions</span>
-            </div>
-
-            {/* Mobile search bar */}
-            <form onSubmit={handleSearchSubmit} className="relative mb-6">
-              <input
-                type="text"
-                placeholder={t('nav.search_placeholder')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-background-secondary text-foreground text-sm pl-11 pr-10 py-3 rounded-2xl border border-border-custom focus:border-primary focus:outline-none"
-              />
-              <Search size={18} className="absolute left-4 top-3.5 text-muted-custom" />
-            </form>
-
-            {/* Mobile Links */}
-            <div className="flex-1 overflow-y-auto space-y-6">
-              <div>
-                <h3 className="text-xs font-black uppercase text-muted-custom tracking-wider mb-2">Shop Categories</h3>
-                <div className="space-y-1">
-                  {categories.map((cat) => (
-                    <Link
-                      key={cat.id}
-                      href={`/category/${cat.id}`}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="block p-2 rounded-xl text-foreground hover:bg-background-secondary hover:text-primary transition-colors text-sm font-medium"
-                    >
-                      {t(cat.name)}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-xs font-black uppercase text-muted-custom tracking-wider mb-2">Language Selection</h3>
-                <div className="flex gap-2">
-                  {(['en', 'hi', 'mr'] as const).map((lang) => (
-                    <button
-                      key={lang}
-                      onClick={() => setLanguage(lang)}
-                      className={`flex-1 text-center py-2 rounded-xl text-xs font-bold border transition-colors ${
-                        language === lang
-                          ? 'bg-primary border-primary text-white'
-                          : 'bg-background-secondary border-border-custom text-foreground'
-                      }`}
-                    >
-                      {lang === 'en' ? 'EN' : lang === 'hi' ? 'HI' : 'MR'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-xs font-black uppercase text-muted-custom tracking-wider mb-2">My Account</h3>
-                <div className="space-y-1">
-                  <Link
-                    href="/profile"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block p-2 rounded-xl text-foreground hover:bg-background-secondary transition-colors text-sm"
-                  >
-                    {t('nav.profile')}
-                  </Link>
-                  <Link
-                    href="/seller/register"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block p-2 rounded-xl text-foreground hover:bg-background-secondary transition-colors text-sm"
-                  >
-                    {t('nav.become_seller')}
-                  </Link>
-                </div>
-              </div>
-            </div>
-            
-            <div className="pt-6 border-t border-border-custom mt-auto">
-              <button
-                onClick={toggleTheme}
-                className="w-full flex justify-between items-center p-3 rounded-2xl bg-background-secondary hover:bg-border-custom transition-all text-sm font-semibold"
-              >
-                <span>Theme Mode</span>
-                <span className="flex items-center gap-1.5 text-primary text-xs capitalize">
-                  {theme} {theme === 'light' ? <Sun size={14} /> : <Moon size={14} />}
-                </span>
-              </button>
             </div>
           </div>
         </div>

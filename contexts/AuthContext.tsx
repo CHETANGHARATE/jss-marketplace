@@ -1,0 +1,117 @@
+'use client';
+
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { ApiUser } from '../types/api';
+import { authService, LoginPayload, RegisterPayload } from '../services/authService';
+
+interface AuthContextType {
+  user: ApiUser | null;
+  token: string | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  login: (payload: LoginPayload) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<void>;
+  logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<ApiUser | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem('auth_token');
+    if (storedToken) {
+      setToken(storedToken);
+      authService
+        .getProfile()
+        .then((userData) => {
+          setUser(userData);
+        })
+        .catch(() => {
+          localStorage.removeItem('auth_token');
+          setToken(null);
+          setUser(null);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    } else {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const login = async (payload: LoginPayload) => {
+    setIsLoading(true);
+    try {
+      const data = await authService.login(payload);
+      setToken(data.token);
+      setUser(data.user);
+      localStorage.setItem('auth_token', data.token);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (payload: RegisterPayload) => {
+    setIsLoading(true);
+    try {
+      const data = await authService.register(payload);
+      setToken(data.token);
+      setUser(data.user);
+      localStorage.setItem('auth_token', data.token);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    setIsLoading(true);
+    try {
+      await authService.logout();
+    } finally {
+      localStorage.removeItem('auth_token');
+      setToken(null);
+      setUser(null);
+      setIsLoading(false);
+    }
+  };
+
+  const refreshUser = async () => {
+    if (!token) return;
+    try {
+      const userData = await authService.getProfile();
+      setUser(userData);
+    } catch {
+      // Handle error
+    }
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        isLoading,
+        isAuthenticated: !!user && !!token,
+        login,
+        register,
+        logout,
+        refreshUser,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}

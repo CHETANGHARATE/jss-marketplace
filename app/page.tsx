@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Sparkles, Clock, Star, Landmark, Award, ShieldAlert } from 'lucide-react';
+import { Sparkles, Clock, Star } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { BannerSlider } from '../components/BannerSlider';
 import { CategorySection } from '../components/CategorySection';
@@ -9,25 +9,24 @@ import { FeaturedCategories } from '../components/FeaturedCategories';
 import { ProductCard } from '../components/ProductCard';
 import { ProductQuickView } from '../components/ProductQuickView';
 import { Accordion } from '../components/ui/Accordion';
-import { getCategories } from '../services/category';
+import { categoryService } from '../services/categoryService';
 import { getTrendingProducts, getNewArrivals, getBestSellers } from '../services/product';
 import { getFeaturedSellers } from '../services/seller';
 import { Category, Product, Seller } from '../types';
 import { mockTestimonials, mockFaqs } from '../constants/mockData';
 
 export default function HomePage() {
-  const { t } = { t: (k: string) => k }; // local fallback, but we will use the hook
+  const { t } = { t: (k: string) => k };
   const langContext = useLanguage();
   const translate = langContext ? langContext.t : (k: string) => k;
 
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [trendingProducts, setTrendingProducts] = useState<Product[]>([]);
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
   const [bestSellers, setBestSellers] = useState<Product[]>([]);
   const [featuredSellers, setFeaturedSellers] = useState<Seller[]>([]);
   const [quickViewProductId, setQuickViewProductId] = useState<string | null>(null);
 
-  // Time Countdown state for Flash Sales
   const [timeLeft, setTimeLeft] = useState({ hours: 14, minutes: 32, seconds: 45 });
 
   useEffect(() => {
@@ -51,7 +50,7 @@ export default function HomePage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const cats = await getCategories();
+        const cats = await categoryService.getCategories();
         setCategories(cats);
 
         const trending = await getTrendingProducts(4);
@@ -74,14 +73,9 @@ export default function HomePage() {
 
   return (
     <div className="space-y-20">
-      
-      {/* 1. Hero Banner Slider */}
       <BannerSlider />
-
-      {/* 2. Popular Categories */}
       {categories.length > 0 && <CategorySection categories={categories} />}
 
-      {/* 3. Flash Sale / Today's Deals Strip */}
       <section className="bg-gradient-to-r from-accent/10 to-orange-500/5 border border-accent/20 rounded-3xl p-6 sm:p-8 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -96,7 +90,6 @@ export default function HomePage() {
             </div>
           </div>
           
-          {/* Countdown Clock */}
           <div className="flex items-center gap-2 text-foreground font-black">
             <span className="bg-card border border-border-custom px-3.5 py-2 rounded-xl shadow-sm text-sm sm:text-base">
               {String(timeLeft.hours).padStart(2, '0')}h
@@ -112,7 +105,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Products Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {trendingProducts.map((prod) => (
             <ProductCard
@@ -124,7 +116,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 4. Featured Category Previews (Fashion, Electronics, Agriculture, etc.) */}
       {categories.length > 0 && (
         <FeaturedCategories
           categories={categories}
@@ -132,10 +123,7 @@ export default function HomePage() {
         />
       )}
 
-      {/* 5. Trending / New Arrivals / Best Sellers Tabs */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Column 1 - Trending */}
         <div className="space-y-6 bg-card border border-border-custom p-6 rounded-3xl shadow-sm">
           <div className="flex items-center gap-2 pb-4 border-b border-border-custom">
             <Sparkles className="text-primary" size={18} />
@@ -162,7 +150,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Column 2 - New Arrivals */}
         <div className="space-y-6 bg-card border border-border-custom p-6 rounded-3xl shadow-sm">
           <div className="flex items-center gap-2 pb-4 border-b border-border-custom">
             <Clock className="text-accent" size={18} />
@@ -189,7 +176,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Column 3 - Best Sellers */}
         <div className="space-y-6 bg-card border border-border-custom p-6 rounded-3xl shadow-sm">
           <div className="flex items-center gap-2 pb-4 border-b border-border-custom">
             <Star className="text-amber-500 fill-amber-500" size={18} />
@@ -221,7 +207,6 @@ export default function HomePage() {
 
       </section>
 
-      {/* 6. Featured Sellers & B2B Verification */}
       <section className="space-y-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
@@ -263,7 +248,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 7. Customer Testimonials */}
       <section className="space-y-8 bg-background-secondary border border-border-custom p-8 rounded-3xl">
         <div className="text-center space-y-2">
           <h2 className="text-2xl md:text-3xl font-black text-foreground tracking-tight">
@@ -291,7 +275,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 8. FAQ Section */}
       <section id="faq" className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start scroll-mt-24">
         <div className="space-y-3">
           <h2 className="text-2xl md:text-3xl font-black text-foreground tracking-tight">
@@ -309,7 +292,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Quick View Portal Modal */}
       {quickViewProductId && (
         <ProductQuickView
           productId={quickViewProductId}
