@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next';
+import { envConfig } from '../config/env';
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -7,6 +8,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/admin/', '/vendor/', '/account/', '/checkout/'],
     },
-    sitemap: 'http://localhost:3000/sitemap.xml',
+    sitemap: `${envConfig.appUrl}/sitemap.xml`,
   };
 }

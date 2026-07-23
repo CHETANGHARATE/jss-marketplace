@@ -5,6 +5,7 @@
 export const envConfig = {
   apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.jsssolutions.in/api/v1',
   appName: process.env.NEXT_PUBLIC_APP_NAME || 'JSS Marketplace',
+  appUrl: process.env.NEXT_PUBLIC_APP_URL || 'https://jss-marketplace.vercel.app',
   appEnv: process.env.NODE_ENV || 'development',
   isProduction: process.env.NODE_ENV === 'production',
 

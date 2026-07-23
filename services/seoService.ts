@@ -1,7 +1,8 @@
 import { ApiProduct } from '../types/api';
+import { envConfig } from '../config/env';
 
 export const seoService = {
-  generateProductJsonLd(product: ApiProduct, siteUrl = 'http://localhost:3000') {
+  generateProductJsonLd(product: ApiProduct, siteUrl = envConfig.appUrl) {
     const price = product.sale_price || product.original_price;
     return {
       '@context': 'https://schema.org/',
@@ -28,7 +29,7 @@ export const seoService = {
     };
   },
 
-  generateBreadcrumbJsonLd(items: Array<{ label: string; href?: string }>, siteUrl = 'http://localhost:3000') {
+  generateBreadcrumbJsonLd(items: Array<{ label: string; href?: string }>, siteUrl = envConfig.appUrl) {
     return {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
@@ -41,7 +42,7 @@ export const seoService = {
     };
   },
 
-  generateOrganizationJsonLd(siteUrl = 'http://localhost:3000') {
+  generateOrganizationJsonLd(siteUrl = envConfig.appUrl) {
     return {
       '@context': 'https://schema.org',
       '@type': 'Organization',

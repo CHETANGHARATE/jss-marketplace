@@ -10,6 +10,7 @@ import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { SkipLink } from '../components/SkipLink';
 import { seoService } from '../services/seoService';
+import { envConfig } from '../config/env';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,11 +22,11 @@ export const metadata: Metadata = {
   description: 'Shop millions of products from verified multi-vendor merchants on JSS Marketplace.',
   keywords: ['eCommerce', 'Multi-vendor', 'Marketplace', 'Online Shopping', 'JSS Marketplace'],
   authors: [{ name: 'JSS Solutions' }],
-  metadataBase: new URL('http://localhost:3000'),
+  metadataBase: new URL(envConfig.appUrl),
   openGraph: {
     title: 'JSS Marketplace - Enterprise Multi-Vendor eCommerce Platform',
     description: 'Shop millions of products from verified multi-vendor merchants on JSS Marketplace.',
-    url: 'http://localhost:3000',
+    url: envConfig.appUrl,
     siteName: 'JSS Marketplace',
     locale: 'en_US',
     type: 'website',

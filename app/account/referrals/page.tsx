@@ -11,7 +11,7 @@ export default function ReferralProgramPage() {
   const [copiedType, setCopiedType] = useState<string | null>(null);
 
   const code = referral?.referral_code || 'JSS-REF-892';
-  const url = referral?.shareable_url || 'http://localhost:3000/register?ref=JSS-REF-892';
+  const url = referral?.shareable_url || `${typeof window !== 'undefined' ? window.location.origin : 'https://jss-marketplace.vercel.app'}/register?ref=${code}`;
 
   const handleCopy = (text: string, type: string) => {
     navigator.clipboard.writeText(text);
